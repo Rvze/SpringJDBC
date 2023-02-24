@@ -1,28 +1,29 @@
 package com.example.springjdbc.dao.impl;
 
 import com.example.springjdbc.dao.BookDao;
-import com.example.springjdbc.dao.GenreDao;
 import com.example.springjdbc.exception.ValidationException;
 import com.example.springjdbc.model.Author;
 import com.example.springjdbc.model.Book;
 import com.example.springjdbc.model.Genre;
 import com.example.springjdbc.model.Library;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
 public class BookDaoJdbc implements BookDao {
 
-    private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcOperations jdbcTemplate;
 
     @Override
     public int getAgeLimit(String bookName) {

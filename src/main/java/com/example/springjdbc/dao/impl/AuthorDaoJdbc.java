@@ -3,6 +3,7 @@ package com.example.springjdbc.dao.impl;
 import com.example.springjdbc.dao.AuthorDao;
 import com.example.springjdbc.exception.ValidationException;
 import com.example.springjdbc.model.Author;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -14,13 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+@RequiredArgsConstructor
 public class AuthorDaoJdbc implements AuthorDao {
 
     private final NamedParameterJdbcOperations jdbcTemplate;
-
-    public AuthorDaoJdbc(NamedParameterJdbcOperations jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public Author save(Author author) {

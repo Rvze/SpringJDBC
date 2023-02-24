@@ -11,6 +11,7 @@ import com.example.springjdbc.service.GenreService;
 import com.example.springjdbc.service.LibraryService;
 import lombok.RequiredArgsConstructor;
 import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
@@ -26,8 +27,7 @@ public class LibraryEventCommands {
     private final BookService bookService;
     private final GenreService genreService;
     private final LibraryService libraryService;
-    private final LineReader reader;
-    private String login;
+    private final LineReader reader = LineReaderBuilder.builder().build();
 
     public String ask(String question) {
         return this.reader.readLine("\n" + question + " > ");

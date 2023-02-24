@@ -1,7 +1,6 @@
 package com.example.springjdbc.service;
 
 import com.example.springjdbc.model.Author;
-import com.example.springjdbc.model.Book;
 
 import java.util.List;
 
