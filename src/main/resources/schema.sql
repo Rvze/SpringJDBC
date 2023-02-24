@@ -2,16 +2,16 @@ drop table if exists authors, books, genres, authors_libraries, libraries, books
 create table authors
 (
     authorid    serial primary key,
-    authorname  varchar(255) not null,
+    authorname  varchar(255) unique not null,
     rating      int,
-    yearofbirth int          not null,
+    yearofbirth int                 not null,
     biography   text
 
 );
 create table genres
 (
     genreid     serial primary key,
-    genrename   varchar(255),
+    genrename   varchar(255) unique not null,
     description text,
     agelimit    int
 );
@@ -19,10 +19,10 @@ create table genres
 create table books
 (
     bookid   serial primary key,
-    bookname varchar(255),
-    year     int,
+    bookname varchar(255) unique not null,
+    year     int                 not null,
     genreid  serial references genres (genreid),
-    title varchar(255)
+    title    varchar(255)
 );
 
 create table libraries

@@ -3,7 +3,6 @@ package com.example.springjdbc.dao.impl;
 import com.example.springjdbc.dao.AuthorDao;
 import com.example.springjdbc.exception.ValidationException;
 import com.example.springjdbc.model.Author;
-import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -73,25 +72,29 @@ public class AuthorDaoJdbc implements AuthorDao {
     }
 
     @Override
-    public List<String> getBooks(String authorName) {
-        String sql = """
-                select bookname
-                from authors
-                         left join books_authors ba on authors.authorid = ba.authorid
-                         left join books on books.bookid = ba.bookid
-                where authorname=:authorname""";
-        Map<String, String> params = Map.of("authorname", authorName);
-        return jdbcTemplate.queryForList(sql, params, String.class);
-    }
-
-    @Override
-    public Long getAuthor(String authorName) {
+    public Author getAuthor(String authorName) {
         String findSql = "select a.authorid from authors a where authorname=:authorName";
         Map<String, String> params = Map.of("authorName", authorName);
         try {
-            return jdbcTemplate.queryForObject(findSql, params, Long.class);
+            return jdbcTemplate.query(findSql, params, new AuthorMapper()).get(0);
         } catch (DataAccessException e) {
             return null;
+        }
+    }
+
+    @Override
+    public List<Author> getAuthorsByBookName(String bookName) {
+        try {
+            String sql = """
+                    select *
+                    from authors
+                             right join books_authors ba on authors.authorid = ba.authorid
+                             right join books b on ba.bookid = b.bookid
+                    where bookname =:bookname""";
+            Map<String, String> param = Map.of("bookname", bookName);
+            return jdbcTemplate.query(sql, param, new AuthorMapper());
+        } catch (DataAccessException e) {
+            throw new ValidationException("Такой книги нет!");
         }
     }
 

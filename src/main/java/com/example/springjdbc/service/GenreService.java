@@ -1,8 +1,8 @@
-package com.example.springjdbc.dao;
+package com.example.springjdbc.service;
 
 import com.example.springjdbc.model.Genre;
 
-public interface GenreDao {
+public interface GenreService {
     Genre save(Genre genre);
 
     Long checkIsExist(String genreName);
@@ -10,5 +10,4 @@ public interface GenreDao {
     Genre findById(Long genreId);
 
     Genre getGenreByBookName(String bookName);
-
 }

@@ -1,21 +1,22 @@
-package com.example.springjdbc.dao;
+package com.example.springjdbc.service;
 
 import com.example.springjdbc.model.Book;
 import com.example.springjdbc.model.Genre;
 
 import java.util.List;
 
-public interface BookDao {
-    int getAgeLimit(String bookName);
+public interface BookService {
+    Book save(Book book, Long authorId, Long libraryId, Genre genre);
 
-    Book save(Book book, Long authorId, Long libraryid, Genre genre);
+    int getBookAgeLimit(String bookName);
 
-    void checkIsExsitBook(String bookname);
+    void checkIsExistBook(String bookName);
 
     List<Book> getBookById(Long bookId);
 
     void deleteBookById(Long bookId);
 
     List<Book> getBooksByAuthorName(String authorName);
+
 
 }

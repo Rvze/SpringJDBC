@@ -55,4 +55,14 @@ class GenreDaoJdbcTest {
         assertNotNull(genre);
     }
 
+    @Test
+    @DisplayName("Получить жанр по имени книги")
+    void getGenreByBookName() {
+        var bookname = "Евгений Онегин";
+        assertDoesNotThrow(() -> {
+            var result = genreDaoJdbc.getGenreByBookName(bookname);
+            assertEquals(GENRE_NAME, result.getGenreName());
+        });
+    }
+
 }

@@ -1,12 +1,9 @@
 package com.example.springjdbc.model;
 
-import com.example.springjdbc.exception.BookYearException;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 
 import java.util.Set;
-import java.util.UUID;
 
 @Builder
 @Data

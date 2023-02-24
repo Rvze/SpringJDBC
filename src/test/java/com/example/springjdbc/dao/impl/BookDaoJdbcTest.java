@@ -12,15 +12,12 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @DisplayName(value = "Dao для работы с автороами")
 @ExtendWith(SpringExtension.class)
-@Import({BookDaoJdbc.class, GenreDaoJdbc.class})
+@Import({BookDaoJdbc.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookDaoJdbcTest {
 
@@ -35,32 +32,10 @@ class BookDaoJdbcTest {
     private BookDaoJdbc bookDaoJdbc;
 
     @Test
-    @DisplayName("Получить жанр книги")
-    void getGenre() {
-        var genreFromDb = bookDaoJdbc.getGenre(BOOK_NAME);
-        assertEquals(BOOK_GENRE, genreFromDb);
-    }
-
-    @Test
     @DisplayName("Получить возростное ограничение книги")
     void getAgeLimit() {
         var ageLimit = bookDaoJdbc.getAgeLimit(BOOK_NAME);
         assertEquals(AGE_LIMIT, ageLimit);
-    }
-
-    @Test
-    @DisplayName("Получить авторов этой книги")
-    void getAuthors() {
-        var authors = bookDaoJdbc.getAuthors(BOOK_NAME);
-        assertEquals(BOOK_AUTHOR, authors.get(0));
-    }
-
-    @Test
-    @DisplayName("Получить библиотеки, где хранится книга")
-    void getLibraries() {
-        var libraries = bookDaoJdbc.getLibraries(BOOK_NAME);
-        List<String> list = new ArrayList<>(libraries);
-        assertEquals(BOOK_LIBRARY, list.get(0));
     }
 
     @Test

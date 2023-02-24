@@ -23,23 +23,6 @@ import org.springframework.stereotype.Repository;
 public class BookDaoJdbc implements BookDao {
 
     private final NamedParameterJdbcTemplate jdbcTemplate;
-    private final GenreDao genreDao;
-
-    @Override
-    public String getGenre(String bookName) {
-        try {
-            String sql = """
-                    select genrename
-                    from genres
-                             left join books b on b.genreid = genres.genreid
-                    where bookname=:bookname""";
-            Map<String, String> params = Map.of("bookname", bookName);
-            return jdbcTemplate.queryForObject(sql, params, String.class);
-        } catch (DataAccessException e) {
-            System.out.println("Такой книги нет!");
-        }
-        return "";
-    }
 
     @Override
     public int getAgeLimit(String bookName) {
@@ -51,33 +34,6 @@ public class BookDaoJdbc implements BookDao {
             System.out.println("Такой книги нет!");
         }
         return 0;
-    }
-
-    @Override
-    public List<String> getAuthors(String bookName) {
-        try {
-            String sql = """
-                    select authorname
-                    from authors
-                             right join books_authors ba on authors.authorid = ba.authorid
-                             right join books b on ba.bookid = b.bookid
-                    where bookname =:bookname""";
-            Map<String, String> param = Map.of("bookname", bookName);
-            return jdbcTemplate.queryForList(sql, param, String.class);
-        } catch (DataAccessException e) {
-            throw new ValidationException("Такой книги нет!");
-        }
-    }
-
-    @Override
-    public Set<String> getLibraries(String bookName) {
-        String sql = "select libraryname\n" +
-                "from libraries\n" +
-                "         join books_libraries bl on libraries.libraryid = bl.libraryid\n" +
-                "         join books b on b.bookid = bl.bookid\n" +
-                "where bookname = :bookname";
-        Map<String, String> param = Map.of("bookname", bookName);
-        return new HashSet<>(jdbcTemplate.queryForList(sql, param, String.class));
     }
 
     @Override
@@ -142,6 +98,18 @@ public class BookDaoJdbc implements BookDao {
                 "where bookid = :bookid";
         Map<String, Long> param = Map.of("bookid", bookId);
         jdbcTemplate.update(sql, param);
+    }
+
+    @Override
+    public List<Book> getBooksByAuthorName(String authorName) {
+        String sql = """
+                select bookname
+                from authors
+                         left join books_authors ba on authors.authorid = ba.authorid
+                         left join books on books.bookid = ba.bookid
+                where authorname=:authorname""";
+        Map<String, String> params = Map.of("authorname", authorName);
+        return jdbcTemplate.query(sql, params, new BookMapper());
     }
 
 

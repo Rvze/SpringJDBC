@@ -3,6 +3,7 @@ package com.example.springjdbc.dao.impl;
 import com.example.springjdbc.dao.GenreDao;
 import com.example.springjdbc.model.Genre;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -46,6 +47,21 @@ public class GenreDaoJdbc implements GenreDao {
         return jdbcTemplate.query(sql, param, new GenreMapper()).get(0);
     }
 
+    @Override
+    public Genre getGenreByBookName(String bookName) {
+        try {
+            String sql = """
+                    select *
+                    from genres
+                             left join books b on b.genreid = genres.genreid
+                    where bookname=:bookname""";
+            Map<String, String> params = Map.of("bookname", bookName);
+            return jdbcTemplate.query(sql, params, new GenreMapper()).get(0);
+        } catch (DataAccessException e) {
+            System.out.println("Такой книги нет!");
+        }
+        return null;
+    }
 
     public static class GenreMapper implements RowMapper<Genre> {
 

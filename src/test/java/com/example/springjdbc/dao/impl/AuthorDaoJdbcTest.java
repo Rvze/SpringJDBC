@@ -10,8 +10,6 @@ import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.swing.*;
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,19 +52,23 @@ class AuthorDaoJdbcTest {
     }
 
     @Test
-    @DisplayName("Найти книги автора")
-    void getBooks() {
-        var books = authorDaoJdbc.getBooks(PUSHKIN_NAME);
-        assertEquals(PUSHKINS_BOOKS, books);
-    }
-
-    @Test
     @DisplayName("Сохранить автора в базе")
     void save() {
         Author author = Author.builder().authorName("author").biography("cool author")
                 .rating(5).yearOfBirth(2002).build();
         var savedAuthor = authorDaoJdbc.save(author);
         assertEquals(author, savedAuthor);
+    }
+
+    @Test
+    @DisplayName("Получить книги по имени автора")
+    void getAuthorsByBookName() {
+        var bookName = "Евгений Онегин";
+        assertDoesNotThrow(() -> {
+            var result = authorDaoJdbc.getAuthorsByBookName(bookName);
+            assertFalse(result.isEmpty());
+            assertEquals(PUSHKIN_NAME, result.get(0).getAuthorName());
+        });
     }
 
 

@@ -48,4 +48,13 @@ class LibraryDaoJdbcTest {
         assertEquals(nextId, res);
     }
 
+    @Test
+    @DisplayName("Получить список библиотек по названию книги")
+    void getLibrariesByBookName() {
+        var bookname = "Евгений Онегин";
+        assertDoesNotThrow(() -> {
+            var result = libraryDaoJdbc.getLibrariesByBookName(bookname);
+            assertFalse(result.isEmpty());
+        });
+    }
 }
