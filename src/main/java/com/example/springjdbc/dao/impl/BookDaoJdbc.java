@@ -1,0 +1,212 @@
+package com.example.springjdbc.dao.impl;
+
+import com.example.springjdbc.dao.BookDao;
+import com.example.springjdbc.exception.ValidationException;
+import com.example.springjdbc.model.Author;
+import com.example.springjdbc.model.Book;
+import com.example.springjdbc.model.Genre;
+import com.example.springjdbc.model.Library;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
+import org.springframework.stereotype.Repository;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Repository
+@RequiredArgsConstructor
+@Slf4j
+public class BookDaoJdbc implements BookDao {
+
+    private final NamedParameterJdbcOperations jdbcTemplate;
+
+    @Override
+    public int getAgeLimit(String bookName) {
+        try {
+            String sql = "select agelimit from genres join books b on b.genreid=genres.genreid where bookname=:bookname";
+            Map<String, String> param = Map.of("bookname", bookName);
+            return jdbcTemplate.queryForObject(sql, param, Integer.class);
+        } catch (DataAccessException e) {
+            log.error("Такой книги нет!");
+        }
+        return 0;
+    }
+
+    @Override
+    public Book save(Book book, Long authorid, Long libraryid, Genre genre) {
+        String insertSql = "insert into books (bookname, year, genreid, title) values(:bookname, :year, :genreid, :title)";
+        var result = jdbcTemplate.update(insertSql, Map.of("bookname", book.getBookName(),
+                "year", book.getYear(), "genreid", genre.getId(), "title", book.getTitle()));
+
+        var bookId = getBookId(book.getBookName());
+
+        var author = linkBookAndAuthor(bookId, authorid);
+        var library = linkBookAndLibrary(bookId, libraryid);
+        book.setAuthors(author);
+        book.setLibraries(library);
+        return result == 1 ? book : null;
+    }
+
+    private Long getBookId(String bookName) {
+        String findIdSql = "select b.bookid from books b where bookname=:bookname";
+        Map<String, String> param = Map.of("bookname", bookName);
+        return jdbcTemplate.queryForObject(findIdSql, param, Long.class);
+    }
+
+    private Set<Author> linkBookAndAuthor(Long bookId, Long authorId) {
+        String sql = "insert into books_authors(authorid, bookid) values (:authorid, :bookid)";
+        Map<String, Long> params = Map.of("authorid", authorId, "bookid", bookId);
+        jdbcTemplate.update(sql, params);
+
+        String findAuthorsIds = """
+                select authorid from books_authors where bookid=:bookId
+                """;
+        String findAuthors = """
+                select * from authors where authorid=:authorId
+                """;
+
+        List<Long> authorIds = jdbcTemplate.queryForList(findAuthorsIds, Map.of("bookId", bookId), Long.class);
+        return new HashSet<>(jdbcTemplate.query(findAuthors, Map.of("authorId", authorIds), new AuthorDaoJdbc.AuthorMapper()));
+    }
+
+    private Set<Library> linkBookAndLibrary(Long bookId, Long libraryId) {
+        String sql = "insert into books_libraries (libraryid, bookid) values(:libraryid, :bookid)";
+        Map<String, Long> params = Map.of("libraryid", libraryId, "bookid", bookId);
+        jdbcTemplate.update(sql, params);
+        String findLibrariesSql = """
+                select * from libraries as l
+                join books_libraries as bl on bl.libraryid = l.libraryid
+                where bl.bookid = :bookId
+                """;
+        return new HashSet<>(jdbcTemplate.query(findLibrariesSql, Map.of("bookId", bookId), new LibraryDaoJdbc.LibraryMapper()));
+    }
+
+    @Override
+    public void checkIsExsitBook(String bookname) {
+        String findSql = "select * from books";
+        var books = jdbcTemplate.query(findSql, new BookMapper());
+        books.forEach(book1 -> {
+            if (book1.getBookName().equals(bookname)) {
+                throw new ValidationException("Такая книга уже существует, проверьте свои ввод!");
+            }
+        });
+    }
+
+    @Override
+    public Optional<Book> getBookById(Long bookId) {
+        String sql = """
+                select * from books
+                    left join books_authors ba on books.bookid = ba.bookid
+                        left join books_libraries bl on books.bookid = bl.bookid
+                            left join authors a on ba.authorid = a.authorid
+                                left join libraries l on bl.libraryid = l.libraryid
+                                    where books.bookid=:bookid
+                """;
+        Map<String, Long> param = Map.of("bookid", bookId);
+        try {
+            List<Book> result = jdbcTemplate.query(sql, param, new BookMapper());
+            return !result.isEmpty() ? Optional.of(result.get(0)) : Optional.empty();
+        } catch (DataAccessException e) {
+            log.error("Книга с таким идентификатором :{} не существует", bookId);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void deleteBookById(Long bookId) {
+        String sql = """
+                delete
+                from books_libraries
+                where bookid = :bookid;
+                delete
+                from books_authors
+                where bookid = :bookid;
+                delete
+                from books
+                where bookid = :bookid
+                """;
+        Map<String, Long> param = Map.of("bookid", bookId);
+        jdbcTemplate.update(sql, param);
+    }
+
+    @Override
+    public List<Book> getBooksByAuthorName(String authorName) {
+        String sql = """
+                select bookname
+                from authors
+                         left join books_authors ba on authors.authorid = ba.authorid
+                         left join books on books.bookid = ba.bookid
+                where authorname=:authorname""";
+        Map<String, String> params = Map.of("authorname", authorName);
+        return jdbcTemplate.query(sql, params, new BookMapper());
+    }
+
+
+    public static class BookMapperForAll implements RowMapper<Book> {
+        @Override
+        public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Set<Author> authors = new HashSet<>();
+            Set<Library> libraries = new HashSet<>();
+            var authorid = rs.getLong("authorid");
+            var authorname = rs.getString("authorname");
+            var rating = rs.getInt("rating");
+            var yearofbirth = rs.getInt("yearofbirth");
+            var biography = rs.getString("biography");
+            authors.add(Author.builder().id(authorid).authorName(authorname)
+                    .rating(rating).yearOfBirth(yearofbirth).biography(biography).build());
+
+            var bookid = rs.getLong("bookid");
+            var bookName = rs.getString("bookname");
+            var year = rs.getInt("year");
+            var title = rs.getString("title");
+
+            var genreid = rs.getLong("genreid");
+
+            var libraryid = rs.getLong("libraryid");
+            var libraryname = rs.getString("libraryname");
+            libraries.add(Library.builder().id(libraryid).libraryName(libraryname).build());
+            while (rs.next()) {
+                authorid = rs.getLong("authorid");
+                authorname = rs.getString("authorname");
+                rating = rs.getInt("rating");
+                yearofbirth = rs.getInt("yearofbirth");
+                biography = rs.getString("biography");
+
+                libraryid = rs.getLong("libraryid");
+                libraryname = rs.getString("libraryname");
+
+                libraries.add(Library.builder().id(libraryid).libraryName(libraryname).build());
+                authors.add(Author.builder().id(authorid).authorName(authorname)
+                        .rating(rating).yearOfBirth(yearofbirth).biography(biography).build());
+            }
+
+            return Book.builder()
+                    .authors(authors)
+                    .id(bookid)
+                    .bookName(bookName)
+                    .year(year)
+                    .title(title)
+                    .genreId(genreid)
+                    .libraries(libraries)
+                    .build();
+        }
+    }
+
+    public static class BookMapper implements RowMapper<Book> {
+        @Override
+        public Book mapRow(ResultSet rs, int rowNum) throws SQLException {
+            var id = rs.getLong("bookid");
+            var bookName = rs.getString("bookname");
+            var year = rs.getInt("year");
+            var genreid = rs.getLong("genreid");
+            var title = rs.getString("title");
+            return Book.builder().id(id).bookName(bookName).year(year)
+                    .title(title).genreId(genreid).build();
+        }
+    }
+}
