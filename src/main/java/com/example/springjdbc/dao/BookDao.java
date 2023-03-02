@@ -4,6 +4,7 @@ import com.example.springjdbc.model.Book;
 import com.example.springjdbc.model.Genre;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface BookDao {
     int getAgeLimit(String bookName);
@@ -12,7 +13,7 @@ public interface BookDao {
 
     void checkIsExsitBook(String bookname);
 
-    List<Book> getBookById(Long bookId);
+    Optional<Book> getBookById(Long bookId);
 
     void deleteBookById(Long bookId);
 

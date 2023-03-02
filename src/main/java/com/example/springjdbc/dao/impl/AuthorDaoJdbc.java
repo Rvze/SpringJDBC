@@ -40,7 +40,8 @@ public class AuthorDaoJdbc implements AuthorDao {
 
     @Override
     public int count() {
-        return jdbcTemplate.queryForObject("select count(*) from authors", Map.of(), Integer.class);
+        return jdbcTemplate
+                .queryForObject("select count(*) from authors", Map.of(), Integer.class);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.example.springjdbc.model.Book;
 import com.example.springjdbc.model.Genre;
 import com.example.springjdbc.model.Library;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -14,13 +15,11 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class BookDaoJdbc implements BookDao {
 
     private final NamedParameterJdbcOperations jdbcTemplate;
@@ -32,7 +31,7 @@ public class BookDaoJdbc implements BookDao {
             Map<String, String> param = Map.of("bookname", bookName);
             return jdbcTemplate.queryForObject(sql, param, Integer.class);
         } catch (DataAccessException e) {
-            System.out.println("Такой книги нет!");
+            log.error("Такой книги нет!");
         }
         return 0;
     }
@@ -80,23 +79,37 @@ public class BookDaoJdbc implements BookDao {
     }
 
     @Override
-    public List<Book> getBookById(Long bookId) {
-        String sql = "select * from books left join books_authors ba on books.bookid = ba.bookid left join books_libraries bl on books.bookid = bl.bookid left join authors a on ba.authorid = a.authorid left join libraries l on bl.libraryid = l.libraryid where books.bookid=:bookid";
+    public Optional<Book> getBookById(Long bookId) {
+        String sql = """
+                select * from books
+                    left join books_authors ba on books.bookid = ba.bookid
+                        left join books_libraries bl on books.bookid = bl.bookid
+                            left join authors a on ba.authorid = a.authorid
+                                left join libraries l on bl.libraryid = l.libraryid
+                                    where books.bookid=:bookid
+                """;
         Map<String, Long> param = Map.of("bookid", bookId);
-        return jdbcTemplate.query(sql, param, new BookMapperForAll());
+        try {
+            return Optional.of(jdbcTemplate.query(sql, param, new BookMapper()).get(0));
+        } catch (DataAccessException e) {
+            log.error("Книга с таким идентификатором :{} не существует", bookId);
+            return Optional.empty();
+        }
     }
 
     @Override
     public void deleteBookById(Long bookId) {
-        String sql = "delete\n" +
-                "from books_libraries\n" +
-                "where bookid = :bookid;\n" +
-                "delete\n" +
-                "from books_authors\n" +
-                "where bookid = :bookid;\n" +
-                "delete\n" +
-                "from books\n" +
-                "where bookid = :bookid";
+        String sql = """
+                delete
+                from books_libraries
+                where bookid = :bookid;
+                delete
+                from books_authors
+                where bookid = :bookid;
+                delete
+                from books
+                where bookid = :bookid
+                """;
         Map<String, Long> param = Map.of("bookid", bookId);
         jdbcTemplate.update(sql, param);
     }

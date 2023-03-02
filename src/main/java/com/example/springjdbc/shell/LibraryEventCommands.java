@@ -18,6 +18,7 @@ import org.springframework.shell.standard.ShellOption;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @ShellComponent
@@ -138,7 +139,7 @@ public class LibraryEventCommands {
     }
 
     @ShellMethod(value = "get book by id", key = {"getb", "get book"})
-    public List<Book> getBookById(@ShellOption Long bookId) {
+    public Optional<Book> getBookById(@ShellOption Long bookId) {
         return bookService.getBookById(bookId);
     }
 

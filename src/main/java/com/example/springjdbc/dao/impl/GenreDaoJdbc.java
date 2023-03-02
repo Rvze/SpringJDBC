@@ -3,6 +3,7 @@ package com.example.springjdbc.dao.impl;
 import com.example.springjdbc.dao.GenreDao;
 import com.example.springjdbc.model.Genre;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -14,13 +15,14 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @Repository
+@Slf4j
 public class GenreDaoJdbc implements GenreDao {
     private final NamedParameterJdbcOperations jdbcTemplate;
 
     @Override
     public Genre save(Genre genre) {
         String saveGenreSql = "insert into genres(genrename, description, agelimit) values(:genrename, :description, :agelimit)";
-        var savedGenre = jdbcTemplate.update(saveGenreSql, Map.of("genrename", genre.getGenreName(),
+        jdbcTemplate.update(saveGenreSql, Map.of("genrename", genre.getGenreName(),
                 "description", genre.getDescription(),
                 "agelimit", genre.getAgeLimit()));
         String findIdSql = "select * from genres where genrename=:genrename";
@@ -58,7 +60,7 @@ public class GenreDaoJdbc implements GenreDao {
             Map<String, String> params = Map.of("bookname", bookName);
             return jdbcTemplate.query(sql, params, new GenreMapper()).get(0);
         } catch (DataAccessException e) {
-            System.out.println("Такой книги нет!");
+            log.error("Такой книги нет! {}", bookName);
         }
         return null;
     }
