@@ -72,7 +72,7 @@ public class AuthorDaoJdbc implements AuthorDao {
 
     @Override
     public Author getAuthor(String authorName) {
-        String findSql = "select a.authorid from authors a where authorname=:authorName";
+        String findSql = "select * from authors a where authorname=:authorName";
         Map<String, String> params = Map.of("authorName", authorName);
         try {
             return jdbcTemplate.query(findSql, params, new AuthorMapper()).get(0);

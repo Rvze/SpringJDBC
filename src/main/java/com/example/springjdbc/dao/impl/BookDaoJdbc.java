@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -44,8 +45,10 @@ public class BookDaoJdbc implements BookDao {
 
         var bookId = getBookId(book.getBookName());
 
-        linkBookAndAuthor(bookId, authorid);
-        linkBookAndLibrary(bookId, libraryid);
+        var author = linkBookAndAuthor(bookId, authorid);
+        var library = linkBookAndLibrary(bookId, libraryid);
+        book.setAuthors(author);
+        book.setLibraries(library);
         return result == 1 ? book : null;
     }
 
@@ -55,16 +58,32 @@ public class BookDaoJdbc implements BookDao {
         return jdbcTemplate.queryForObject(findIdSql, param, Long.class);
     }
 
-    private void linkBookAndAuthor(Long bookId, Long authorId) {
+    private Set<Author> linkBookAndAuthor(Long bookId, Long authorId) {
         String sql = "insert into books_authors(authorid, bookid) values (:authorid, :bookid)";
         Map<String, Long> params = Map.of("authorid", authorId, "bookid", bookId);
         jdbcTemplate.update(sql, params);
+
+        String findAuthorsIds = """
+                select authorid from books_authors where bookid=:bookId
+                """;
+        String findAuthors = """
+                select * from authors where authorid=:authorId
+                """;
+
+        List<Long> authorIds = jdbcTemplate.queryForList(findAuthorsIds, Map.of("bookId", bookId), Long.class);
+        return new HashSet<>(jdbcTemplate.query(findAuthors, Map.of("authorId", authorIds), new AuthorDaoJdbc.AuthorMapper()));
     }
 
-    private void linkBookAndLibrary(Long bookId, Long libraryId) {
+    private Set<Library> linkBookAndLibrary(Long bookId, Long libraryId) {
         String sql = "insert into books_libraries (libraryid, bookid) values(:libraryid, :bookid)";
         Map<String, Long> params = Map.of("libraryid", libraryId, "bookid", bookId);
         jdbcTemplate.update(sql, params);
+        String findLibrariesSql = """
+                select * from libraries as l
+                join books_libraries as bl on bl.libraryid = l.libraryid
+                where bl.bookid = :bookId
+                """;
+        return new HashSet<>(jdbcTemplate.query(findLibrariesSql, Map.of("bookId", bookId), new LibraryDaoJdbc.LibraryMapper()));
     }
 
     @Override
@@ -90,7 +109,8 @@ public class BookDaoJdbc implements BookDao {
                 """;
         Map<String, Long> param = Map.of("bookid", bookId);
         try {
-            return Optional.of(jdbcTemplate.query(sql, param, new BookMapper()).get(0));
+            List<Book> result = jdbcTemplate.query(sql, param, new BookMapper());
+            return !result.isEmpty() ? Optional.of(result.get(0)) : Optional.empty();
         } catch (DataAccessException e) {
             log.error("Книга с таким идентификатором :{} не существует", bookId);
             return Optional.empty();
@@ -186,7 +206,7 @@ public class BookDaoJdbc implements BookDao {
             var genreid = rs.getLong("genreid");
             var title = rs.getString("title");
             return Book.builder().id(id).bookName(bookName).year(year)
-                    .title(title).build();
+                    .title(title).genreId(genreid).build();
         }
     }
 }

@@ -5,27 +5,21 @@ import com.example.springjdbc.model.Book;
 import com.example.springjdbc.model.Genre;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @DisplayName(value = "Dao для работы с автороами")
-@ExtendWith(SpringExtension.class)
 @Import({BookDaoJdbc.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class BookDaoJdbcTest {
 
     private static final String BOOK_NAME = "Евгений Онегин";
-    private static final String BOOK_GENRE = "Roman";
     private static final int AGE_LIMIT = 16;
-    private static final String BOOK_AUTHOR = "Пушкин";
-    private static final String BOOK_LIBRARY = "РНБ";
     private static final Long BOOK_ID = 1L;
 
     @Autowired

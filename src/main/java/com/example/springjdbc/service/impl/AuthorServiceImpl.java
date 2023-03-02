@@ -1,6 +1,7 @@
 package com.example.springjdbc.service.impl;
 
 import com.example.springjdbc.dao.AuthorDao;
+import com.example.springjdbc.exception.ValidationException;
 import com.example.springjdbc.model.Author;
 import com.example.springjdbc.service.AuthorService;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +41,10 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public Author getAuthor(String authorName) {
-        return authorDao.getAuthor(authorName);
+        var author = authorDao.getAuthor(authorName);
+        if (author == null)
+            throw new ValidationException("Такого автора в нашей базе не существует! Сначала добавьте его");
+        return author;
     }
 
     @Override

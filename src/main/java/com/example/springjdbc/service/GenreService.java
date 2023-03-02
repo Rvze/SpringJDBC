@@ -5,7 +5,7 @@ import com.example.springjdbc.model.Genre;
 public interface GenreService {
     Genre save(Genre genre);
 
-    Long checkIsExist(String genreName);
+    Genre checkIsExist(Genre genre);
 
     Genre findById(Long genreId);
 

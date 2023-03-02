@@ -3,20 +3,15 @@ package com.example.springjdbc.dao.impl;
 import com.example.springjdbc.model.Author;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
 @DisplayName(value = "Dao для работы с автороами")
-@ExtendWith(SpringExtension.class)
 @Import(AuthorDaoJdbc.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AuthorDaoJdbcTest {
@@ -25,7 +20,6 @@ class AuthorDaoJdbcTest {
     private final static String PUSHKIN_NAME = "Пушкин";
     private final static int PUSHKIN_BOOKS = 1;
     private final static int PUSHKIN_RATING = 10;
-    private final static List<String> PUSHKINS_BOOKS = List.of("Евгений Онегин");
 
     @Autowired
     private AuthorDaoJdbc authorDaoJdbc;

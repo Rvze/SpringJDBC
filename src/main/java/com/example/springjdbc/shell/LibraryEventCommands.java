@@ -113,29 +113,23 @@ public class LibraryEventCommands {
         String bookTitle = this.ask(q5);
         String genrename = this.ask(q3);
 
+        String description = this.ask(g1);
+        String agelimit = this.ask(g2);
 
-        Genre genre;
-        var genreId = genreService.checkIsExist(genrename);
-        if (genreId == null) {
-            String description = this.ask(g1);
-            String agelimit = this.ask(g2);
-            genre = Genre.builder().genreName(genrename).ageLimit(Integer.valueOf(agelimit)).description(description).build();
-            genre = genreService.save(genre);
-        } else {
-            genre = genreService.findById(genreId);
-        }
+        Genre genre = Genre.builder().genreName(genrename).ageLimit(Integer.valueOf(agelimit)).description(description).build();
+
+        genre = genreService.checkIsExist(genre);
+
         String authorname = this.ask(q4);
-        var findedAuthorId = authorService.getAuthor(authorname);
-        if (Objects.equals(findedAuthorId, null)) {
-            throw new ValidationException("Такого автора в нашей базе не существует! Сначала добавьте его");
-        }
+        var findedAuthor = authorService.getAuthor(authorname);
+
         String libraryname = this.ask(l1);
 
         var libraryid = libraryService.getOrSaveLibrary(libraryname);
 
         Book book = Book.builder().bookName(bookName).year(Integer.valueOf(bookYear)).title(bookTitle).build();
 
-        return bookService.save(book, findedAuthorId.getId(), libraryid, genre);
+        return bookService.save(book, findedAuthor.getId(), libraryid, genre);
     }
 
     @ShellMethod(value = "get book by id", key = {"getb", "get book"})

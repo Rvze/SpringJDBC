@@ -18,8 +18,9 @@ public class GenreServiceImpl implements GenreService {
     }
 
     @Override
-    public Long checkIsExist(String genreName) {
-        return genreDao.checkIsExist(genreName);
+    public Genre checkIsExist(Genre genre) {
+        Long genreId = genreDao.checkIsExist(genre.getGenreName());
+        return genreId == null ? save(genre) : genre;
     }
 
     @Override
